@@ -7,3 +7,4 @@ gamesAndLB.db
 
 # Environment variables (if used)
 .env
+.gitignore

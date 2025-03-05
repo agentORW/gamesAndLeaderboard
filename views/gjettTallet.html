@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gjett tallet</title>
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
+</head>
+<body>
+    <h1>GJETT TALLET</h1>
+    <div class="container">
+        <a href="/">Tilbake til start</a>
+        <h2>Velg vanskelighetsgrad:</h2>
+        <label>Nøyaktig tall
+            <input class="difficulty" value="0" type="radio" checked="checked" name="radio">
+            <span class="checkmark"></span>
+        </label>
+        <label>Innen 5
+            <input class="difficulty" value="5" type="radio" name="radio">
+            <span class="checkmark"></span>
+        </label>
+        <label>Innen 10
+            <input class="difficulty" value="10" type="radio" name="radio">
+            <span class="checkmark"></span>
+        </label>
+        <label>Innen 20
+            <input class="difficulty" value="20" type="radio" name="radio">
+            <span class="checkmark"></span>
+        </label>
+
+        <h2>Velg tall mellom 1 og 100:</h2>
+        <input type="text" id="tall" placeholder="Skriv inn et tall">
+        <button id="gjett">Gjett</button>
+        <h2>Datamaskin velger:</h2>
+        <p id="datamaskinValg">Ingen valg enda</p>
+        <h2 id="resultat">Ingen resultat enda</h2>
+    </div>
+
+    <script src="/js/gjettTallet.js"></script>
+</body>
+</html>
