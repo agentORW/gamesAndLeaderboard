@@ -65,7 +65,7 @@ app.post('/api/login', async (req, res) => {
       const pool = await poolPromise;
       
       const result = await pool.request()
-          .input('email', sql.NVarChar, email)
+          .input('email', mssql.NVarChar, email)
           .query('SELECT * FROM users WHERE email = @email');
       
       const user = result.recordset[0];
@@ -106,6 +106,7 @@ app.get('/api/user', verifyToken, async (req, res) => {
       res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '/public/views/index.html'));

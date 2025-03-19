@@ -9,7 +9,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     //const messageDiv = document.getElementById('message');
 
     try {
-        const response = await fetch(`${BASE_URL}/api/login`, {
+        const response = await fetch(`/api/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -33,7 +33,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             console.log(data.error)
         }
     } catch (error) {
-        console("error occured")
+        console.log("error occured")
         console.error('Error:', error);
     }
 });
