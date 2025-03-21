@@ -62,8 +62,20 @@ button:hover {
     background-color: #2980b9;
 }
 
-.navbar {
+#navbar {
     list-style-type: none;
     margin: 0;
-    padding: 0;
-  }
+    padding: 10px;
+    overflow: hidden;
+    background-color: #3498db;
+}
+
+#navbar li {
+    float: left;
+}
+
+#navbar li a {
+    display: inline;
+    padding: 10px;
+    background-color: #333;
+}

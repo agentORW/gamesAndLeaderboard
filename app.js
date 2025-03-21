@@ -1,10 +1,10 @@
 const express = require('express');
-const sqlite3 = require('better-sqlite3');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 require("dotenv").config()
 const mssql = require('mssql');
+const cookieParser = require('cookie-parser');
 
 // Configure the connection string
 const dbConfig = {
@@ -14,7 +14,9 @@ const dbConfig = {
   database: process.env.db_name, // Your database name
   options: {
     encrypt: true, // Encrypt the connection for security (important for Azure)
-    trustServerCertificate: false // Ensure the server certificate is trusted
+    trustServerCertificate: false, // Ensure the server certificate is trusted
+    requestTimeout: 60000, // Increase request timeout (default is 15000ms)
+    connectionTimeout: 30000 // Increase connection timeout (default is 15000ms)
   }
 };
 
@@ -34,10 +36,11 @@ app.use(express.static(path.join(__dirname, "public")));
 
 const SECRET_KEY = process.env.SECRET_KEY;
 
-const db = sqlite3('./gamesAndLB.db', {verbose: console.log})
+//const db = sqlite3('./gamesAndLB.db', {verbose: console.log})
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+app.use(cookieParser());
 
 app.post('/api/register', async (req, res) => {
   try {
@@ -83,6 +86,8 @@ app.post('/api/login', async (req, res) => {
           SECRET_KEY,
           { expiresIn: '6h' }
       );
+
+      res.cookie('jwt', token, { httpOnly: true, secure: true });
       
       res.json({ message: 'Login successful', token });
   } catch (error) {
@@ -90,12 +95,17 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+app.get('/api/logout', async (req, res) => {
+  res.clearCookie("jwt")
+  res.sendFile(path.join(__dirname, '/public/views/loggInn.html'));
+})
+
 // Protected route to get user details
 app.get('/api/user', verifyToken, async (req, res) => {
   try {
       const pool = await poolPromise;
       const result = await pool.request()
-          .input('id', sql.Int, req.userId)
+          .input('id', mssql.Int, req.userId)
           .query('SELECT username, email FROM users WHERE id = @id');
       
       if (result.recordset.length === 0) {
@@ -108,7 +118,7 @@ app.get('/api/user', verifyToken, async (req, res) => {
 });
 
 
-app.get('/', (req, res) => {
+app.get('/', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '/public/views/index.html'));
 });
 
@@ -137,13 +147,14 @@ app.get('/protected', verifyToken, (req, res) => {
 
 // Middleware to verify JWT
 function verifyToken(req, res, next) {
-  const token = req.headers['authorization'];
+  const token = req.cookies.jwt;
   
   if (!token) {
-    return res.status(403).json({ error: 'No token provided' });
+    return res.sendFile(path.join(__dirname, '/public/views/loggInn.html'));
+    //return res.status(403).json({ error: 'No token provided' });
   }
 
-  jwt.verify(token.split(' ')[1], SECRET_KEY, (err, decoded) => {
+  jwt.verify(token, SECRET_KEY, (err, decoded) => {
     if (err) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
