@@ -1,5 +1,3 @@
-const BASE_URL = 'http://localhost:3000';
-
 try {
 // Login Form Handler
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -49,10 +47,9 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
     const username = document.getElementById('username').value;
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    const messageDiv = document.getElementById('message');
 
     try {
-        const response = await fetch(`${BASE_URL}/api/register`, {
+        const response = await fetch(`/api/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -84,7 +81,7 @@ async function testProtectedRoute() {
     const token = localStorage.getItem('token');
 
     try {
-        const response = await fetch(`${BASE_URL}/protected`, {
+        const response = await fetch(`/protected`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`

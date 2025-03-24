@@ -90,6 +90,8 @@ app.post('/api/login', async (req, res) => {
       res.cookie('jwt', token, { httpOnly: true, secure: true });
       
       res.json({ message: 'Login successful', token });
+
+      res.sendFile(path.join(__dirname, '/public/views/index.html'));
   } catch (error) {
       res.status(500).json({ error: error.message });
   }
@@ -122,11 +124,11 @@ app.get('/', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '/public/views/index.html'));
 });
 
-app.get('/steinsakspapir', (req, res) => {
+app.get('/steinsakspapir', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '/public/views/steinSaksPapir.html'));
 });
 
-app.get('/gjetttallet', (req, res) => {
+app.get('/gjetttallet', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '/public/views/gjettTallet.html'));
 });
 
