@@ -1,0 +1,39 @@
+name: Deploy to KjoreExpress VM
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.VM_IP }} >> ~/.ssh/known_hosts
+
+      - name: Deploy Code to VM
+        run: |
+          ssh -o StrictHostKeyChecking=no agentorw@${{ secrets.VM_IP }} << 'EOF'
+            cd ~/Website/gamesAndLeaderboard
+            git reset --hard origin/main  # Reset to latest version
+            git pull origin main          # Pull latest changes
+            npm install --production      # Install dependencies (if needed)
+            
+            # Check if the app is running, restart if it is, otherwise start it
+            if pm2 list | grep -q "app"; then
+              pm2 restart app
+            else
+              pm2 start app.js --name "app"
+            fi
+
+            pm2 save  # Save PM2 process list
+          EOF
