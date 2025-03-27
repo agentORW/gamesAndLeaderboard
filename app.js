@@ -158,15 +158,15 @@ function verifyToken(req, res, next) {
 
   jwt.verify(token, SECRET_KEY, (err, decoded) => {
     if (err) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      return res.sendFile(path.join(__dirname, '/public/views/loggInn.html'));
     }
     req.userId = decoded.id;
     next();
   });
 }
 
-const port = 3000;
+const port = 80;
 
 app.listen(port, () => {
-    console.log('Server is running on port http://localhost:3000/');
+    console.log('Server is running on port http://localhost:80/');
 });
