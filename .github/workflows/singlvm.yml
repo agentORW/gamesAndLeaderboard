@@ -27,5 +27,13 @@ jobs:
             git reset --hard origin/main  # Reset to latest version
             git pull origin main          # Pull latest changes
             npm install --production      # Install dependencies (if needed)
-            pm2 restart all               # Restart the application
+            
+            # Check if the app is running, restart if it is, otherwise start it
+            if pm2 list | grep -q "app"; then
+              pm2 restart app
+            else
+              pm2 start app.js --name "app"
+            fi
+
+            pm2 save  # Save PM2 process list
           EOF
