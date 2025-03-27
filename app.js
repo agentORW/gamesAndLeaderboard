@@ -16,7 +16,7 @@ const dbConfig = {
     encrypt: true, // Encrypt the connection for security (important for Azure)
     trustServerCertificate: false, // Ensure the server certificate is trusted
     requestTimeout: 60000, // Increase request timeout (default is 15000ms)
-    connectionTimeout: 30000 // Increase connection timeout (default is 15000ms)
+    connectionTimeout: 60000 // Increase connection timeout (default is 15000ms)
   }
 };
 
