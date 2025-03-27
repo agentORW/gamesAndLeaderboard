@@ -88,14 +88,14 @@ app.post('/api/login', async (req, res) => {
       );
 
       res.cookie('jwt', token, { httpOnly: true, secure: true });
-      
-      res.json({ message: 'Login successful', token });
 
-      res.sendFile(path.join(__dirname, '/public/views/index.html'));
+      res.json({ message: 'Login successful', token });
+      
   } catch (error) {
       res.status(500).json({ error: error.message });
   }
 });
+
 
 app.get('/api/logout', async (req, res) => {
   res.clearCookie("jwt")

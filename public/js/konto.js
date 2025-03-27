@@ -27,6 +27,8 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             
             // Optional: Test protected route
             await testProtectedRoute();
+
+            window.location.href = '/';
         } else {
             console.log(data.error)
         }
