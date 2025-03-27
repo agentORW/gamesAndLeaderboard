@@ -158,7 +158,7 @@ function verifyToken(req, res, next) {
 
   jwt.verify(token, SECRET_KEY, (err, decoded) => {
     if (err) {
-      return res.sendFile(path.join(__dirname, '/public/views/loggInn.html'));
+      return res.status(401).json({ error: 'Unauthorized' });
     }
     req.userId = decoded.id;
     next();
