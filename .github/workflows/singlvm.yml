@@ -1,0 +1,31 @@
+name: Deploy to KjoreExpress VM
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.VM_IP }} >> ~/.ssh/known_hosts
+
+      - name: Deploy Code to VM
+        run: |
+          ssh agentorw@${{ secrets.VM_IP }} << 'EOF'
+            cd ~/Website/gamesAndLeaderboard
+            git reset --hard origin/main  # Reset to latest version
+            git pull origin main          # Pull latest changes
+            npm install --production      # Install dependencies (if needed)
+            pm2 restart all               # Restart the application
+          EOF
