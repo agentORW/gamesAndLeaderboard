@@ -20,14 +20,20 @@ const dbConfig = {
   }
 };
 
+let poolPromise;
+
 // Establish database connection pool
-const poolPromise = new mssql.ConnectionPool(dbConfig)
+function attemptDBconnection () {
+  poolPromise = new mssql.ConnectionPool(dbConfig)
     .connect()
     .then(pool => {
         console.log("Connected to Azure SQL Database");
         return pool;
     })
-    .catch(err => console.error("Database Connection Failed!", err));
+    .catch(err => {console.error("Database Connection Failed!", err); attemptDBconnection()});
+}
+
+attemptDBconnection()
 
 
 const app = express();
