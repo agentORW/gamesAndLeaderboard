@@ -87,7 +87,7 @@ app.post('/api/login', async (req, res) => {
           { expiresIn: '6h' }
       );
 
-      res.cookie('jwt', token, { httpOnly: true, secure: true });
+      res.cookie('jwt', token, { httpOnly: false, secure: false });
 
       res.json({ message: 'Login successful', token });
       
