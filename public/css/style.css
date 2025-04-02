@@ -65,17 +65,30 @@ button:hover {
 #navbar {
     list-style-type: none;
     margin: 0;
-    padding: 10px;
+    padding: 0;
     overflow: hidden;
     background-color: #3498db;
 }
 
-#navbar li {
+#navbar li a {
+    display: block;
+    padding: 14px 16px;
+    color: white;
+    margin-left: 10px;
+}
+
+#navbar li a:hover:not(.active) {
+    background-color: #04AA6D;
+}
+
+.active {
+    background-color: #04AA6D;
+}
+
+.left {
     float: left;
 }
 
-#navbar li a {
-    display: inline;
-    padding: 10px;
-    background-color: #333;
+.right {
+    float: right;
 }

@@ -25,6 +25,10 @@ function playGame(playerChoice) {
     document.getElementById('resultat').innerText = `${result}`;
 }
 
+function sendScore(result) {
+
+}
+
 const choiseButtons = document.querySelectorAll('.valg');
 choiseButtons.forEach((button) => {
     button.addEventListener('click', (event) => {

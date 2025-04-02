@@ -16,7 +16,7 @@ const dbConfig = {
     encrypt: true, // Encrypt the connection for security (important for Azure)
     trustServerCertificate: false, // Ensure the server certificate is trusted
     requestTimeout: 60000, // Increase request timeout (default is 15000ms)
-    connectionTimeout: 60000 // Increase connection timeout (default is 15000ms)
+    connectionTimeout: 120000 // Increase connection timeout (default is 15000ms)
   }
 };
 
@@ -146,6 +146,28 @@ app.get('/protected', verifyToken, (req, res) => {
     userId: req.userId 
   });
 });
+
+app.post('/score', verifyToken, async (req, res) => {
+  try {
+    const { gameId, type } = req.body;
+
+    const pool = await poolPromise;
+
+    const result = await pool.request()
+        .input('id', mssql.Int, req.userId)
+        .query('SELECT username, email FROM users WHERE id = @id');
+    
+    if (result.recordset.length === 0) {
+        return res.status(404).json({ error: 'User not found' });
+    }
+
+    
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ error: 'Internal server error' });
+  }
+  
+})
 
 // Middleware to verify JWT
 function verifyToken(req, res, next) {
