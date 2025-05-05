@@ -1,9 +1,4 @@
 
-function getComputerChoice() {
-    const numberRange = [1, 100];
-    return (Math.floor(Math.random() * numberRange[1])+1+numberRange[0]);
-}
-
 function getPlayerDifficulty() {
     const difficulty = document.querySelectorAll('.difficulty');
     for (let i = 0; i < difficulty.length; i++ ) {
@@ -13,23 +8,31 @@ function getPlayerDifficulty() {
     };
 }
 
-function playGame(playerChoice) {
-    const computerChoice = getComputerChoice();
-    const playerDifficulty = getPlayerDifficulty();
-    let result = '';
+async function sendGuessNumberResult(playerChoice, difficulty) {
+    try {
+        const response = await fetch('/api/games/guess-number', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include', // send JWT cookie
+            body: JSON.stringify({
+                guess: Number(playerChoice),
+                difficulty: Number(difficulty)
+            })
+        });
 
-    if (Math.abs(playerChoice - computerChoice) <= playerDifficulty) {
-        result = 'Du vant!';
-    } else {
-        result = 'Du tapte!';
+        const data = await response.json();
+        document.getElementById('datamaskinValg').innerText = `${data.generatedNumber}`;
+        document.getElementById('resultat').innerText = data.result;
+    } catch (err) {
+        console.error('Error sending guess:', err);
     }
-
-    document.getElementById('datamaskinValg').innerText = `${computerChoice}`;
-    document.getElementById('resultat').innerText = `${result}`;
 }
 
 const guessButton = document.getElementById('gjett');
 guessButton.addEventListener('click', (event) => {
     const playerChoice = document.getElementById('tall').value;
-    playGame(playerChoice);
+    const difficulty = getPlayerDifficulty();
+    sendGuessNumberResult(playerChoice, difficulty);
 });

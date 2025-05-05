@@ -3,10 +3,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 require("dotenv").config()
-const mssql = require('mssql');
+//const mssql = require('mssql');
+const sqlite3 = require('better-sqlite3')
+const db = sqlite3('./gamesAndLB.db', {verbose: console.log})
 const cookieParser = require('cookie-parser');
 
-// Configure the connection string
+/* // Configure the connection string
 const dbConfig = {
   user: process.env.db_user, // Azure SQL Database username
   password: process.env.db_password, // Azure SQL Database password
@@ -33,7 +35,7 @@ function attemptDBconnection () {
     .catch(err => {console.error("Database Connection Failed!", err); attemptDBconnection()});
 }
 
-attemptDBconnection()
+attemptDBconnection() */
 
 
 const app = express();
@@ -53,13 +55,9 @@ app.post('/api/register', async (req, res) => {
       const { username, email, password } = req.body;
       const saltRounds = 10;
       const hashedPassword = await bcrypt.hash(password, saltRounds);
-      const pool = await poolPromise;
 
-      await pool.request()
-          .input('username', mssql.NVarChar, username)
-          .input('email', mssql.NVarChar, email)
-          .input('password', mssql.NVarChar, hashedPassword)
-          .query('INSERT INTO users (username, email, password) VALUES (@username, @email, @password)');
+      db.prepare('INSERT INTO users (username, email, password) VALUES (?, ?, ?)')
+      .run(username, email, hashedPassword);
       
       res.status(201).json({ message: 'User registered successfully' });
   } catch (error) {
@@ -71,13 +69,9 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
   try {
       const { email, password } = req.body;
-      const pool = await poolPromise;
       
-      const result = await pool.request()
-          .input('email', mssql.NVarChar, email)
-          .query('SELECT * FROM users WHERE email = @email');
+      const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
       
-      const user = result.recordset[0];
       if (!user) {
           return res.status(401).json({ error: 'Invalid credentials' });
       }
@@ -87,8 +81,9 @@ app.post('/api/login', async (req, res) => {
           return res.status(401).json({ error: 'Invalid credentials' });
       }
 
+      // Make sure to include the user ID in the token payload
       const token = jwt.sign(
-          { id: user.id, email: user.email },
+          { id: user.idusers, email: user.email },
           SECRET_KEY,
           { expiresIn: '6h' }
       );
@@ -111,12 +106,9 @@ app.get('/api/logout', async (req, res) => {
 // Protected route to get user details
 app.get('/api/user', verifyToken, async (req, res) => {
   try {
-      const pool = await poolPromise;
-      const result = await pool.request()
-          .input('id', mssql.Int, req.userId)
-          .query('SELECT username, email FROM users WHERE id = @id');
+      const user = db.prepare('SELECT username, email FROM users WHERE id = ?').get(req.userId);
       
-      if (result.recordset.length === 0) {
+      if (!user) {
           return res.status(404).json({ error: 'User not found' });
       }
       res.status(200).json(result.recordset[0]);
@@ -138,6 +130,10 @@ app.get('/gjetttallet', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '/public/views/gjettTallet.html'));
 });
 
+app.get('/leaderboard', verifyToken, (req, res) => {
+  res.sendFile(path.join(__dirname, '/public/views/leaderboard.html'));
+});
+
 app.get('/logginn', (req, res) => {
   res.sendFile(path.join(__dirname, '/public/views/loggInn.html'));
 });
@@ -153,48 +149,182 @@ app.get('/protected', verifyToken, (req, res) => {
   });
 });
 
-app.post('/score', verifyToken, async (req, res) => {
+app.get('/api/leaderboard', verifyToken, (req, res) => {
   try {
-    const { gameId, type } = req.body;
+      const gameId = req.query.gameId; // Optional filter by game
+      const sortBy = req.query.sortBy || 'wins'; // Default sort by wins
+      
+      let query = `
+          SELECT username, wins, losses, draw, idGame
+          FROM leaderboard
+          INNER JOIN users
+      `;
+      
+      // Add game filter if specified
+      if (gameId && gameId !== 'all') {
+          query += ` WHERE idGame = ?`;
+      }
+      
+      // Execute the query
+      let stmt = db.prepare(query);
+      let results = gameId && gameId !== 'all' 
+          ? stmt.all(gameId)
+          : stmt.all();
+      
+      // Sort results based on sortBy parameter
+      if (sortBy === 'wins') {
+          results.sort((a, b) => b.wins - a.wins);
+      } else if (sortBy === 'winrate') {
+          results.sort((a, b) => {
+              const totalA = a.wins + a.losses + a.draw;
+              const totalB = b.wins + b.losses + b.draw;
+              const rateA = totalA > 0 ? a.wins / totalA : 0;
+              const rateB = totalB > 0 ? b.wins / totalB : 0;
+              return rateB - rateA;
+          });
+      } else if (sortBy === 'games') {
+          results.sort((a, b) => {
+              const totalA = a.wins + a.losses + a.draw;
+              const totalB = b.wins + b.losses + b.draw;
+              return totalB - totalA;
+          });
+      }
+      
+      res.json(results);
+  } catch (error) {
+      console.error('Error retrieving leaderboard data:', error);
+      res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
-    const pool = await poolPromise;
 
-    const result = await pool.request()
-        .input('id', mssql.Int, req.userId)
-        .query('SELECT username, email FROM users WHERE id = @id');
+app.post('/api/games/rps', verifyToken, (req, res) => {
+  const { choice: playerChoice } = req.body;
+  const choices = ['stein', 'saks', 'papir'];
+  const computerChoice = choices[Math.floor(Math.random() * choices.length)];
+  const gameId = 0;
+
+  let result = '';
+  if (playerChoice === computerChoice) {
+      result = 'Uavgjort!';
+  } else if (
+      (playerChoice === 'stein' && computerChoice === 'saks') ||
+      (playerChoice === 'papir' && computerChoice === 'stein') ||
+      (playerChoice === 'saks' && computerChoice === 'papir')
+  ) {
+      result = 'Du vant!';
+  } else {
+      result = 'Du tapte!';
+  }
+
+  // Check or insert leaderboard row
+  const exists = db.prepare('SELECT 1 FROM leaderboard WHERE idUser = ? AND idGame = ?').get(req.userId, gameId);
+  if (!exists) {
+      db.prepare('INSERT INTO leaderboard (idUser, idGame, wins, losses, draw) VALUES (?, ?, 0, 0, 0)')
+        .run(req.userId, gameId);
+  }
+
+  const stmt = result === 'Du vant!'
+      ? 'UPDATE leaderboard SET wins = wins + 1 WHERE idUser = ? AND idGame = ?'
+      : result === 'Du tapte!'
+          ? 'UPDATE leaderboard SET losses = losses + 1 WHERE idUser = ? AND idGame = ?'
+          : 'UPDATE leaderboard SET draw = draw + 1 WHERE idUser = ? AND idGame = ?';
+
+  db.prepare(stmt).run(req.userId, gameId);
+
+  res.json({ result, computerChoice });
+});
+
+app.post('/api/games/guess-number', verifyToken, (req, res) => {
+  try {
+    const { guess, difficulty } = req.body;
+    const guessNum = parseInt(guess);
+    const difficultyNum = parseInt(difficulty);
     
-    if (result.recordset.length === 0) {
-        return res.status(404).json({ error: 'User not found' });
+    // Verify that we have a valid userId from the token
+    if (!req.userId) {
+      return res.status(401).json({ error: 'User ID not found in token' });
     }
 
+    console.log(req.userId)
     
+    const generatedNumber = Math.floor(Math.random() * 100) + 1;
+    const win = Math.abs(guessNum - generatedNumber) <= difficultyNum;
+    const result = win ? 'Du vant!' : 'Du tapte!';
+    const gameId = 1;
+    
+    //console.log(`User ID: ${req.userId}, Game ID: ${gameId}, Guess: ${guessNum}, Generated: ${generatedNumber}`);
+
+    // Check or insert leaderboard row
+    const exists = db.prepare('SELECT 1 FROM leaderboard WHERE idUser = ? AND idGame = ?').get(req.userId, gameId);
+    if (!exists) {
+      db.prepare('INSERT INTO leaderboard (idUser, idGame, wins, losses, draw) VALUES (?, ?, 0, 0, 0)')
+        .run(req.userId, gameId);
+    }
+
+    const stmt = win
+      ? 'UPDATE leaderboard SET wins = wins + 1 WHERE idUser = ? AND idGame = ?'
+      : 'UPDATE leaderboard SET losses = losses + 1 WHERE idUser = ? AND idGame = ?';
+
+    db.prepare(stmt).run(req.userId, gameId);
+
+    res.json({ result, generatedNumber });
   } catch (error) {
-    console.log(error)
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error in guess-number game:', error);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
   }
-  
-})
+});
 
 // Middleware to verify JWT
 function verifyToken(req, res, next) {
   const token = req.cookies.jwt;
   
   if (!token) {
-    return res.sendFile(path.join(__dirname, '/public/views/loggInn.html'));
-    //return res.status(403).json({ error: 'No token provided' });
+    console.log('No token provided');
+    return res.redirect('/logginn');
   }
 
+  jwt.verify(token, SECRET_KEY, (err, decoded) => {
+    if (err) {
+      console.log('Token verification error:', err);
+      return res.redirect('/logginn');
+    }
+    
+    //console.log('Decoded token:', decoded);
+    
+    // Check for user ID in the token
+    if (decoded.id) {
+      // Use the ID from the token
+      req.userId = decoded.id;
+      next();
+    }
+    else {
+      console.log('Invalid token payload - no id or email:', decoded);
+      return res.redirect('/logginn');
+    }
+  });
+}
+
+function notLoggedIn(req, res, next) {
+  const token = req.cookies.jwt;
+
+  console.log(token)
+
+  if (!token) {
+    next()
+  }
+  
   jwt.verify(token, SECRET_KEY, (err, decoded) => {
     if (err) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
     req.userId = decoded.id;
-    next();
+    return res.sendFile(path.join(__dirname, '/public/views/index.html'))
   });
 }
 
-const port = 80;
+const port = 3000;
 
 app.listen(port, () => {
-    console.log('Server is running on port http://localhost:80/');
+    console.log(`Server is running on port http://localhost:${port}/`);
 });
