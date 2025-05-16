@@ -50,21 +50,35 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
 
+    const neccecaryData = document.getElementById('nececarryData').checked;
+    if (!neccecaryData) {
+        alert("Du må tillate nødvendig data å bli lagret.")
+        return
+    }
+    const optionalData = document.getElementById('optionalData').checked;
+
+    let optionalDataNum = optionalData ? 1 : 0
+
+    optionalDataNum = optionalData.toString()
+
+    console.log(optionalData, optionalDataNum)
+    
     try {
         const response = await fetch(`/api/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ username, email, password })
+            body: JSON.stringify({ username, email, password, optionalDataNum })
         });
 
-        console.log("Data sent bitch", username, email, password)
+        console.log("Data sent bitch", username, email, password, optionalDataNum)
 
         const data = await response.json();
 
         if (response.ok) {
             console.log("Sucsess")
+            window.location.href = '/';
         } else {
             console.log(data.error)
         }

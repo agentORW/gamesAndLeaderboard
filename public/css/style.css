@@ -29,7 +29,7 @@ h1 {
 /* Additional Styles */
 
 /* Style for unordered list for index of games*/
-ul {
+#indexNav {
     list-style-type: square;
     padding: 0;
     margin-left: 5px;

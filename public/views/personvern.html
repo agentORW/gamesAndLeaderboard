@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
+    <title>Document</title>
+</head>
+<body>
+    <ul id="navbar">
+        <li><a class="left" href="/">Home</a></li>
+        <li><a class="left" href="/steinsakspapir">Stein saks papir</a></li>
+        <li><a class="left" href="/gjetttallet">Gjett tallet</a></li>
+        <li><a class="left" href="/leaderboard">Leaderboard</a></li>
+        <div class="dropdown right">
+            <button class="dropbtn">Konto 👤 
+                <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-content">
+                <a href="/api/logout">Logg ut</a>
+                <a href="/preferences">Preferanser</a>
+            </div>
+        </div> 
+    </ul>
+
+    <h1>Personvernerklæring og informasjonskapsler</h1>
+
+    <div class="container">
+
+        <p>Denne nettsiden samler inn og behandler personopplysninger for å gi en trygg og funksjonell brukeropplevelse. All behandling av personopplysninger skjer i tråd med <strong>personvernforordningen (GDPR)</strong> og norske regler fastsatt av <strong>Datatilsynet</strong>.</p>
+
+        <h2>Hvilke data vi samler inn</h2>
+        <p>Når du registrerer deg eller logger inn på nettsiden, lagres følgende personopplysninger:</p>
+        <ul>
+            <li>Brukernavn</li>
+            <li>E-postadresse</li>
+            <li>Passord (lagres i kryptert form med <code>bcrypt</code>)</li>
+            <li>Spillresultater (antall seiere, tap og uavgjort i hvert spill)</li>
+            <li>Bruker-ID (internt i systemet for å identifisere deg)</li>
+        </ul>
+        <p>Vi samler også inn en informasjonskapsel (cookie) som inneholder en autentiseringstoken (JWT) for å holde deg innlogget.</p>
+
+        <h2>Frivillig innhenting av posisjonsdata</h2>
+        <p>I enkelte tilfeller kan vi be om din tillatelse til å samle inn <strong>omtrentlig posisjonsdata</strong> (f.eks. land eller by) for å føre anonym statistikk om hvor brukere benytter tjenesten fra. Dette skjer kun dersom du <strong>aktivt samtykker</strong> i det, og informasjonen blir ikke brukt til å identifisere deg personlig.</p>
+        <ul>
+            <li><strong>Formål:</strong> Statistikk og forbedring av tjenestetilbudet</li>
+            <li><strong>Datatype:</strong> Grov geografisk plassering (f.eks. IP-basert lokasjon eller posisjon via nettleseren)</li>
+            <li><strong>Lagring:</strong> Kun aggregerte og anonymiserte data</li>
+            <li><strong>Frivillighet:</strong> Brukeren kan når som helst avslå eller trekke tilbake samtykke</li>
+        </ul>
+        <p>Vi bruker ikke posisjonsdata til sporing, reklame eller profilering.</p>
+
+        <h2>Formålet med datainnsamlingen</h2>
+        <p>Formålet med datainnsamlingen er å:</p>
+        <ul>
+            <li>Opprette og administrere brukerkontoer</li>
+            <li>Autentisere og autorisere brukere</li>
+            <li>Vise personlige resultater i spill og rangeringer (leaderboard)</li>
+            <li>Forbedre sikkerhet og funksjonalitet i tjenesten</li>
+            <li>Forbedre forståelsen av hvor brukere benytter tjenesten geografisk</li>
+        </ul>
+
+        <h2>Bruk av informasjonskapsler</h2>
+        <p>Vi bruker én informasjonskapsel kalt <code>jwt</code> som inneholder en <strong>JSON Web Token (JWT)</strong>. Denne brukes for å holde deg innlogget og for å beskytte tilgangen til nettsidens funksjoner.</p>
+        <ul>
+            <li><strong>Formål:</strong> Innlogging og autentisering</li>
+            <li><strong>Varighet:</strong> Utløper etter 6 timer</li>
+            <li><strong>Lagring:</strong> Lokalt i nettleseren</li>
+        </ul>
+
+        <h2>Behandlingsgrunnlag</h2>
+        <p>Behandlingen av dine personopplysninger skjer på følgende rettslige grunnlag:</p>
+        <ul>
+            <li><strong>Samtykke:</strong> Du gir aktivt samtykke ved å registrere deg eller tillate posisjonsdeling</li>
+            <li><strong>Berettiget interesse:</strong> For å tilby en fungerende og sikker spilltjeneste</li>
+            <li><strong>Avtale:</strong> For å levere de tjenestene du forventer ved bruk av nettsiden</li>
+        </ul>
+
+        <h2>Lagring og sikkerhet</h2>
+        <p>Dine data lagres sikkert på vår server. Passord blir alltid lagret i kryptert form og kan ikke gjenopprettes i klartekst. Kommunikasjonen med serveren er sikret, og tilgang til databasen er begrenset.</p>
+        <p>JWT-token brukes til autentisering, og sensitiv informasjon sendes ikke i klartekst.</p>
+
+        <h2>Hvor lenge data lagres</h2>
+        <p>Vi lagrer dine opplysninger så lenge du har en aktiv konto. Dersom du ber om å få slettet kontoen din, vil alle personopplysninger knyttet til deg også bli slettet. Informasjonskapsler slettes automatisk etter 6 timer eller når du logger ut.</p>
+        <p>Posisjonsdata slettes eller anonymiseres fortløpende, og benyttes kun til aggregerte analyser.</p>
+
+        <h2>Dine rettigheter</h2>
+        <p>Du har følgende rettigheter i henhold til GDPR og norsk lovgivning:</p>
+        <ul>
+            <li>Rett til innsyn i egne data</li>
+            <li>Rett til å få rettet feilaktige data</li>
+            <li>Rett til sletting («retten til å bli glemt»)</li>
+            <li>Rett til å protestere mot eller begrense behandlingen</li>
+            <li>Rett til å trekke tilbake samtykke</li>
+            <li>Rett til å klage til <strong>Datatilsynet</strong> (<a href="https://www.datatilsynet.no" target="_blank">www.datatilsynet.no</a>)</li>
+        </ul>
+
+        <h2>Deling av data</h2>
+        <p>Vi deler ikke dine personopplysninger med tredjeparter. Alle data behandles og lagres lokalt på vår server og brukes utelukkende til formålene nevnt over.</p>
+
+        <h2>Kontaktinformasjon</h2>
+        <p>Ved spørsmål om personvern, eller dersom du ønsker innsyn i, endre eller slette dine data, ta kontakt:</p>
+        <p><strong>E-post:</strong> <a href="e-oskwis@iskule.no">e-oskwis@iskule.no</a></p>
+    </div>
+</body>
+</html>

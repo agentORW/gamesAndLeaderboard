@@ -52,12 +52,45 @@ app.use(cookieParser());
 
 app.post('/api/register', async (req, res) => {
   try {
-      const { username, email, password } = req.body;
+      const { username, email, password, optionalDataNum } = req.body;
       const saltRounds = 10;
       const hashedPassword = await bcrypt.hash(password, saltRounds);
 
       db.prepare('INSERT INTO users (username, email, password) VALUES (?, ?, ?)')
       .run(username, email, hashedPassword);
+
+      const user = db.prepare('SELECT idusers FROM users WHERE email = ?').get(email);
+
+      if (optionalDataNum) {
+        if (user) {
+          let ip = req.ip;
+          // For development: handle localhost IPs
+          if (ip === '::1' || ip === '127.0.0.1' || ip === '::ffff:127.0.0.1') {
+            ip = '8.8.8.8'; // Use a public IP for testing
+          }
+          try {
+            const response = await fetch(`http://ip-api.com/json/${ip}`);
+            const data = await response.json();
+            console.log(data)
+            if (data.status === 'success') {
+              db.prepare('INSERT INTO user_ip (idUser, lat, lon, countryCode) VALUES (?, ?, ?, ?)')
+                .run(user.idusers, data.lat, data.lon, data.countryCode);
+            } else {
+              console.error('IP-API error:', data);
+            }
+          } catch (err) {
+            console.error('Failed to fetch IP info:', err);
+          }
+        }
+      }
+
+      const token = jwt.sign(
+          { id: user.idusers, email: user.email },
+          SECRET_KEY,
+          { expiresIn: '6h' }
+      );
+
+      res.cookie('jwt', token, { httpOnly: false, secure: false });
       
       res.status(201).json({ message: 'User registered successfully' });
   } catch (error) {
@@ -142,12 +175,24 @@ app.get('/registrer', (req, res) => {
   res.sendFile(path.join(__dirname, '/public/views/registrer.html'));
 });
 
+app.get('/personvern', (req, res) => {
+  res.sendFile(path.join(__dirname, '/public/views/personvern.html'));
+});
+
 app.get('/protected', verifyToken, (req, res) => {
   res.json({ 
     message: 'Access to protected route', 
     userId: req.userId 
   });
 });
+
+app.get('/preferences', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '/public/views/preferences.html'));
+});
+
+app.get('/isadmin', verifyToken, isAdmin, (req, res) => {
+  
+})
 
 app.get('/api/leaderboard', verifyToken, (req, res) => {
   try {
@@ -305,6 +350,11 @@ function verifyToken(req, res, next) {
   });
 }
 
+// Middleware to verify that the user is an admin
+function isAdmin(req, res, next) {
+  
+}
+
 function notLoggedIn(req, res, next) {
   const token = req.cookies.jwt;
 
@@ -322,6 +372,59 @@ function notLoggedIn(req, res, next) {
     return res.sendFile(path.join(__dirname, '/public/views/index.html'))
   });
 }
+
+// Get current IP preference
+app.get('/api/user/ip-preference', verifyToken, (req, res) => {
+    // Check if user has IP data saved
+    const ipData = db.prepare('SELECT * FROM user_ip WHERE idUser = ?').get(req.userId);
+    res.json({ saveIp: !!ipData });
+});
+
+// Set IP preference
+app.post('/api/user/ip-preference', verifyToken, async (req, res) => {
+    const { saveIp } = req.body;
+    const ipData = db.prepare('SELECT * FROM user_ip WHERE idUser = ?').get(req.userId);
+
+    if (saveIp && !ipData) {
+        // Add IP info
+        let ip = req.ip;
+        if (ip === '::1' || ip === '127.0.0.1' || ip === '::ffff:127.0.0.1') {
+            ip = '8.8.8.8'; // Use a public IP for testing
+        }
+        try {
+            const response = await fetch(`http://ip-api.com/json/${ip}`);
+            const data = await response.json();
+            if (data.status === 'success') {
+                db.prepare('INSERT INTO user_ip (idUser, lat, lon, countryCode) VALUES (?, ?, ?, ?)')
+                  .run(req.userId, data.lat, data.lon, data.countryCode);
+                return res.json({ message: 'IP-data lagret.' });
+            } else {
+                return res.status(400).json({ message: 'Kunne ikke hente IP-data.' });
+            }
+        } catch (err) {
+            return res.status(500).json({ message: 'Feil ved lagring av IP-data.' });
+        }
+    } else if (!saveIp && ipData) {
+        // Delete IP info
+        db.prepare('DELETE FROM user_ip WHERE idUser = ?').run(req.userId);
+        return res.json({ message: 'IP-data slettet.' });
+    } else {
+        return res.json({ message: 'Ingen endring.' });
+    }
+});
+
+// Delete user account
+app.delete('/api/user/delete', verifyToken, (req, res) => {
+    try {
+        db.prepare('DELETE FROM user_ip WHERE idUser = ?').run(req.userId);
+        db.prepare('DELETE FROM leaderboard WHERE idUser = ?').run(req.userId);
+        db.prepare('DELETE FROM users WHERE idusers = ?').run(req.userId);
+        res.clearCookie('jwt');
+        res.json({ message: 'Konto slettet.' });
+    } catch (err) {
+        res.status(500).json({ message: 'Feil ved sletting av konto.' });
+    }
+});
 
 const port = 3000;
 

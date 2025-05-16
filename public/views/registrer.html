@@ -18,6 +18,7 @@
             </button>
             <div class="dropdown-content">
                 <a href="/api/logout">Logg ut</a>
+                <a href="/preferences">Preferanser</a>
             </div>
         </div> 
     </ul>
@@ -32,6 +33,14 @@
             
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required><br><br>
+
+            <label for="nececarryData">Jeg aksepterer lagring av nødvendig data</label>
+            <input type="checkbox" id="nececarryData" name="nececarryData">
+            <br><br>
+            <label for="optionalData">Jeg aksepterer lagring av posisjonsdata</label>
+            <input type="checkbox" id="optionalData" name="optionalData">
+
+            <p>Les mer om personvern <a href="/personvern">her</a></p>
             
             <button type="submit">Registrer</button>
         </form>
